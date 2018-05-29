@@ -1,6 +1,6 @@
 var faunadb = require("faunadb"),
   q = faunadb.query;
-var client = new faunadb.Client({ secret:  'YOUR_FAUNADB_SECRET' });
+var client = new faunadb.Client({ secret:  'YOUR_FAUNADB_ADMIN_SECRET' });
 var top_db =  ["production", "internal", "staging"];
 var parent_db = "staging";
 var child_db = ["people_department", "it_department"];
