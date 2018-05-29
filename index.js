@@ -18,9 +18,8 @@ var top_db_creation = client.query(
 
 // Generate fauna databases array for the top level databases
 top_db_creation.then(function(data){
-    var new_top_db = []
-    top_db.forEach(function(value, index){
-        return new_top_db.push(q.Database(value))
+    var new_top_db = top_db.map(function(value, index){
+        return q.Database(value)
     });
 
     // generate keys for top level databases
@@ -34,12 +33,9 @@ top_db_creation.then(function(data){
     return top_db_key_creaction.then(function(data) {
         // Generate an object of top database names and their keys
         var top_db_secrets = {};
-        var top_db_keys = []
-        Object.values(data).forEach(function(element){
-                top_db_keys.push(element.secret);
+        var top_db_keys = Object.values(data).map(function(element){
+                return element.secret;
             });
-
-
         top_db.forEach(function(key, index){
             top_db_secrets[key] = top_db_keys[index]
             });
