@@ -7,7 +7,6 @@ var child_db = ["people_department", "it_department"];
 var top_db_role = "admin";
 var child_db_role = "server";
 
-
 // create Top level databases
 var top_db_creation = client.query(
     q.Map(
@@ -49,46 +48,65 @@ top_db_creation.then(function(data){
                 }
             });
 
-        // Create parent database instance
-        var client = new faunadb.Client({ secret: parent_db_key });
+        if (parent_db_key) {
+            
+            // Create parent database instance
+            var client = new faunadb.Client({ secret: parent_db_key });
 
-        // Create child databases
-        var child_db_creation = client.query(
-            q.Map(
-            child_db,
-            function(name) {
-                return q.CreateDatabase({ name: name });
-              }));
-
-        return child_db_creation.then(function(data){
-            // Generate fauna databases array for the low level databases
-            var new_child_db = []
-            child_db.forEach(function(value, index){
-                return new_child_db.push(q.Database(value))
-                })
-
-            // Generate child databases keys
-            var child_db_key_creation = client.query(
+            // Create child databases
+            var child_db_creation = client.query(
                 q.Map(
-                new_child_db,
-                function(db) {
-                    return q.CreateKey({ role: child_db_role, database: db });
-                    }));
+                child_db,
+                function(name) {
+                    return q.CreateDatabase({ name: name });
+                }));
 
-            return child_db_key_creation.then(function(data) {
-                // Generate an object of child database names and their keys
-                var child_db_secrets = {};
-                var child_db_keys = []
-                Object.values(data).forEach(function(element){
-                    child_db_keys.push(element.secret);
+            return child_db_creation.then(function(data){
+                // Generate fauna databases array for the low level databases
+                var new_child_db = []
+                child_db.forEach(function(value, index){
+                    return new_child_db.push(q.Database(value))
                     })
-                child_db.forEach(function(key, index){
-                    child_db_secrets[key] = child_db_keys[index]
+
+                // Generate child databases keys
+                var child_db_key_creation = client.query(
+                    q.Map(
+                    new_child_db,
+                    function(db) {
+                        return q.CreateKey({ role: child_db_role, database: db });
+                        }));
+
+                return child_db_key_creation.then(function(data) {
+                    // Generate an object of child database names and their keys
+                    var child_db_secrets = {};
+                    var child_db_keys = []
+                    Object.values(data).forEach(function(element){
+                        child_db_keys.push(element.secret);
+                        })
+                    child_db.forEach(function(key, index){
+                        child_db_secrets[key] = child_db_keys[index]
+                        });
+                    console.log("-------------Child database secrets-----------");
+                    console.log(child_db_secrets);
+                    console.log("----------------------------------------------");
                     });
-                console.log("-------------Child database secrets-----------");
-                console.log(child_db_secrets);
-                console.log("----------------------------------------------");
                 });
-            });
+            } else {
+                console.log("-------------- Parent database ---------------");
+                console.log("The parent database does not exists");
+                console.log("----------------------------------------------");
+            }
         });
-    }).catch(function(error){console.error(error)});
+        
+    });
+top_db_creation.catch( function(error) {
+        if (error.name == "Unauthorized") {
+            console.log("-------------Client instantiation-----------");
+            console.log("Fix by using the correct FAUNADB ADMIN SECRET from your dashboard");
+            console.log("----------------------------------------------"); 
+        } else {
+            console.log("-------------Client instantiation-----------");
+            console.log("Fix by using top level database name(s) which do not exist in your dashboard");
+            console.log("----------------------------------------------");
+        }
+    })
