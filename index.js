@@ -1,9 +1,9 @@
 var faunadb = require("faunadb"),
   q = faunadb.query;
-var client = new faunadb.Client({ secret:  'YOUR_FAUNADB_ADMIN_SECRET' });
+var client = new faunadb.Client({ secret:  'fnACyx40c6ACAYGnM-ClfL1_UA90ni19UxYGZr_S' });
 var top_db =  ["production", "staging", "internal"];
 var parent_db = "staging";
-var child_db = ["people_department", "it_department", "markerting_department"];
+var child_db = ["people_department", "it_department", "marketing_department"];
 var top_db_role = "admin";
 var child_db_role = "server";
 
@@ -21,7 +21,7 @@ top_db_exists.then(function(data){
     data.map(function(value, index){
         if (value == false ) {
             non_existing_db.push(top_db[index])
-        }     
+        }
     });
 
     // create Top level databases that do not exists
@@ -39,14 +39,14 @@ top_db_exists.then(function(data){
         });
 
         // generate keys for top level databases
-        var top_db_key_creaction = client.query(
+        var top_db_key_creation = client.query(
             q.Map(
             new_top_db,
             function(db) {
                 return q.CreateKey({ role: top_db_role, database: db });
             }));
 
-        top_db_key_creaction.then(function(data) {
+        top_db_key_creation.then(function(data) {
             // Generate an object of top database names and their keys
             var top_db_secrets = {};
             var top_db_keys = Object.values(data).map(function(element){
@@ -66,7 +66,7 @@ top_db_exists.then(function(data){
                 });
 
             if (parent_db_key) {
-                
+
                 // Create parent database instance
                 var client = new faunadb.Client({ secret: parent_db_key });
 
@@ -84,7 +84,7 @@ top_db_exists.then(function(data){
                     data.map(function(value, index){
                         if (value == false ) {
                             non_existing_dbs.push(child_db[index])
-                        }     
+                        }
                     });
 
                     // Create non-existing child database
@@ -96,7 +96,7 @@ top_db_exists.then(function(data){
                         }));
 
                     child_db_creation.then(function(data){
-                        
+
                         // Generate fauna databases array for the low level databases
                         var new_child_db = []
                         child_db.forEach(function(value, index){
@@ -134,12 +134,12 @@ top_db_exists.then(function(data){
                     console.log("----------------------------------------------");
                 }
             });
-            
+
         });
     });
 
 top_db_exists.catch(function(error){
     console.log("-------------Client instantiation-----------");
     console.log("Fix by using the correct FAUNADB ADMIN SECRET from your dashboard");
-    console.log("----------------------------------------------"); 
+    console.log("----------------------------------------------");
     });
