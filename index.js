@@ -8,62 +8,35 @@ var top_db_role = "admin";
 var child_db_role = "server";
 
 // Check if the top level database exists
-var top_db_exists = client.query(
-    q.Map(
-        top_db,
-        function(db) {
-            return q.Exists(q.Database(db));
-        })
-    );
-
-top_db_exists.then(function(data){
-    var non_existing_db = [];
-    data.map(function(value, index){
-        if (value == false ) {
-            non_existing_db.push(top_db[index])
-        }
-    });
-
-    // create Top level databases that do not exists
-    var top_db_creation = client.query(
-        q.Map(
-        non_existing_db,
-        function(name) {
-            return q.CreateDatabase({ name: name });
-        }));
-
-    // Generate fauna databases array for the top level databases
-    top_db_creation.then(function(data){
-        var new_top_db = top_db.map(function(value, index){
-            return q.Database(value)
-        });
-
-        // generate keys for top level databases
-        var top_db_key_creation = client.query(
-            q.Map(
-            new_top_db,
-            function(db) {
-                return q.CreateKey({ role: top_db_role, database: db });
-            }));
+var top_db_key_creation = client.query(
+    q.Do(
+      // first, create the top level databases if they don't exist
+      q.Map(
+          top_db,
+          function(db) {
+              return q.If(q.Exists(q.Database(db)), "exists", q.CreateDatabase({ name: db }));
+          }),
+      // second, create keys for the top level databases
+      q.Map(
+          top_db,
+          function(db) {
+              return {
+                db : db,
+                secret : q.Select("secret", q.CreateKey({ role: top_db_role, database: q.Database(db) }))
+              };
+          })
+    ));
 
         top_db_key_creation.then(function(data) {
             // Generate an object of top database names and their keys
             var top_db_secrets = {};
-            var top_db_keys = Object.values(data).map(function(element){
-                    return element.secret;
-                });
-            top_db.forEach(function(key, index){
-                top_db_secrets[key] = top_db_keys[index]
+            Object.values(data).forEach(function(element){
+                    top_db_secrets[element.db] = element.secret;
                 });
             console.log("---------------Top database secrets-----------");
             console.log(top_db_secrets);
             console.log("----------------------------------------------");
-            var parent_db_key;
-            Object.keys(top_db_secrets).map(function(key, index) {
-                if (key == parent_db){
-                    parent_db_key = top_db_secrets[key];
-                    }
-                });
+            var parent_db_key = top_db_secrets[parent_db];
 
             if (parent_db_key) {
 
@@ -133,13 +106,9 @@ top_db_exists.then(function(data){
                     console.log("The parent database does not exists");
                     console.log("----------------------------------------------");
                 }
-            });
-
-        });
-    });
-
-top_db_exists.catch(function(error){
+            }).catch(function(error){
     console.log("-------------Client instantiation-----------");
+    console.log(error);
     console.log("Fix by using the correct FAUNADB ADMIN SECRET from your dashboard");
     console.log("----------------------------------------------");
     });
