@@ -8,7 +8,7 @@ var top_db_role = "admin";
 var child_db_role = "server";
 
 // Check if the top level database exists
-var top_db_key_creation = client.query(
+client.query(
   q.Do(
     // first, create the top level databases if they don't exist
     q.Map(
@@ -43,7 +43,7 @@ var top_db_key_creation = client.query(
     // Create parent database instance
     var client = new faunadb.Client({ secret: parent_db_key });
     // Check if the level level database exists
-    var child_db_creation = client.query(
+    client.query(
       q.Do(
         // first, create the low level databases if they don't exist
         q.Map(
