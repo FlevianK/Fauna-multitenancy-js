@@ -1,11 +1,11 @@
 var faunadb = require("faunadb"),
-  q = faunadb.query;
-var client = new faunadb.Client({ secret:  'YOUR_FAUNADB_ADMIN_SECRET' });
-var top_db =  ["production", "staging", "internal"];
-var parent_db = "staging";
-var child_db = ["people_department", "it_department", "marketing_department"];
-var top_db_role = "admin";
-var child_db_role = "server";
+  q = faunadb.query,
+  client = new faunadb.Client({ secret:  'YOUR_FAUNADB_ADMIN_SECRET' }),
+  top_db =  ["production", "staging", "internal"],
+  parent_db = "staging",
+  child_db = ["people_department", "it_department", "marketing_department"],
+  top_db_role = "admin",
+  child_db_role = "server";
 
 // Check if the top level database exists
 client.query(
@@ -41,7 +41,7 @@ client.query(
   var parent_db_key = top_db_secrets[parent_db];
   if (parent_db_key) {
     // Create parent database instance
-    var client = new faunadb.Client({ secret: parent_db_key });
+    client = new faunadb.Client({ secret: parent_db_key });
     // Check if the level level database exists
     client.query(
       q.Do(
